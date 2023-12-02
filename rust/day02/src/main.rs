@@ -1,9 +1,12 @@
+use std::env;
 use std::fs;
 
 struct Run {
     id: i32,
     games: Vec<Game>,
 }
+
+#[derive()]
 struct Game {
     green: i32,
     blue: i32,
@@ -11,9 +14,20 @@ struct Game {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() == 1 {
+        panic!("you must pass in 1 or 2 to tell us what to run")
+    }
+    let solution_num = &args[1];
     let file_path = "puzzle.txt";
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
-    println!("{}", solution2(&contents))
+    if solution_num == "1" {
+        println!("{}", solution(&contents))
+    } else if solution_num == "2" {
+        println!("{}", solution2(&contents))
+    } else {
+        panic!("you must pass in 1 or 2 to tell us what to run")
+    }
 }
 fn solution(input: &str) -> i32 {
     let games = input.lines().map(parse_run);
@@ -56,7 +70,7 @@ fn parse_run(line: &str) -> Run {
     }
     return Run {
         id: game.expect("Need a game id"),
-        games: games,
+        games,
     };
 }
 fn parse(game: &str) -> Game {
@@ -66,20 +80,16 @@ fn parse(game: &str) -> Game {
     let mut green: i32 = 0;
     for a in res {
         if a.ends_with("blue") {
-            blue = (get_number(a))
+            blue = get_number(a)
         }
         if a.ends_with("red") {
-            red = (get_number(a))
+            red = get_number(a)
         }
         if a.ends_with("green") {
-            green = (get_number(a))
+            green = get_number(a)
         }
     }
-    return Game {
-        green: green,
-        blue: blue,
-        red: red,
-    };
+    return Game { green, blue, red };
 }
 fn get_number(line: &str) -> i32 {
     let idx = line.find(" ").expect("There should be a space");
@@ -88,8 +98,6 @@ fn get_number(line: &str) -> i32 {
     } else {
         line.get(0..line.char_indices().nth(idx).unwrap().0)
     };
-    println!("{}", line);
-    dbg!(slice);
     return slice.expect("should be an int").parse().unwrap();
 }
 
@@ -102,11 +110,13 @@ fn is_valid_game(game: &Game) -> bool {
 
     return game.red <= max.red && game.blue <= max.blue && game.green <= max.green;
 }
+#[cfg(test)]
 mod tests {
-    use super::*;
+    use super::solution;
+    use super::solution2;
 
     #[test]
-    fn expectSimple() {
+    fn expect_sol1_example() {
         let input = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
@@ -117,13 +127,13 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
     }
 
     #[test]
-    fn expectSimpleLine() {
+    fn expect_sol1_line() {
         let input = "Game 10: 100 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red";
         let res = solution(input);
         assert_eq!(0, res);
     }
     #[test]
-    fn expectSimpleSol2() {
+    fn expect_sol2_example() {
         let input = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
